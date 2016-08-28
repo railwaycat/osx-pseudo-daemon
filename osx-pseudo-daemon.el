@@ -39,9 +39,9 @@
 
 ;;; Code:
 
-;; Try to require ns to ensure that (featurep 'ns) is t if ns is
+;; Try to require ns to ensure that (featurep 'mac) is t if ns is
 ;; available.
-(require 'ns nil 'noerror)
+(require 'mac nil 'noerror)
 
 ;;;###autoload
 (defgroup osx-pseudo-daemon nil
@@ -68,14 +68,21 @@ platforms.
   :group 'osx-pseudo-daemon
   :global t
   ;; Enable by default on OSX
-  :init-value (featurep 'ns))
+  :init-value (featurep 'mac))
+
+(defun mac-hide-emacs ()
+  "On a Mac, hide all applications other than Emacs and the frontmost
+application."
+  (interactive)
+  (do-applescript (concat "tell application \"System Events\" to "
+                          " tell process \"Emacs\" to set visible to false")))
 
 (defun osxpd-frame-is-last-ns-frame (frame)
   "Returns t if FRAME is the only NS frame."
   (and
-   (featurep 'ns)
+   (featurep 'mac)
    ;; Frame is ns frame
-   (eq (framep frame) 'ns)
+   (eq (framep frame) 'mac)
    ;; No other frames on same terminal
    (>= 1 (length (filtered-frame-list 
                  (lambda (frm) (eq (frame-terminal frm)
@@ -85,7 +92,7 @@ platforms.
   "If FRAME is the last NS frame, open a new hidden NS frame.
 
 This is called immediately prior to FRAME being closed."
-  (when (featurep 'ns)
+  (when (featurep 'mac)
     (let ((frame (or frame (selected-frame))))
       (when (osxpd-frame-is-last-ns-frame frame)
         (progn
@@ -104,7 +111,8 @@ This is called immediately prior to FRAME being closed."
             (select-frame sf))
           ;; Making a frame might unhide emacs, so hide again
           (sit-for 0.1)
-          (ns-hide-emacs t)
+          ;; (ns-hide-emacs t)
+          (mac-hide-emacs)
           )))))
 
 ;; TODO: Is `delete-frame-hook' an appropriate place for this?
@@ -121,7 +129,7 @@ This is called immediately prior to FRAME being closed."
 Instead, just delete the frame as normal."
   (let ((frame (posn-window (event-start event))))
     (if (and osx-pseudo-daemon-mode
-             (eq 'ns (framep frame)))
+             (eq 'mac (framep frame)))
         (delete-frame frame t)
       ad-do-it)))
 
@@ -129,7 +137,7 @@ Instead, just delete the frame as normal."
   "When killing an NS terminal, instead just delete all NS frames."
   (let ((frame (selected-frame)))
     (if (and osx-pseudo-daemon-mode
-             (eq 'ns (framep frame)))
+             (eq 'mac (framep frame)))
         ;; For NS GUI, just delete all NS frames. A new hidden one
         ;; will automatically be spawned by the advice to
         ;; `delete-frame'.
