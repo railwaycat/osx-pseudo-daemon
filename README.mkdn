@@ -1,3 +1,6 @@
+# See https://github.com/DarwinAwardWinner/mac-pseudo-daemon for updates
+This repo is no longer up-to-date
+
 # Emacs "Pseudo-Daemon" for Mac OS X
 
 If you've ever tried to use Emacs in daemon mode on Mac OS X, you
